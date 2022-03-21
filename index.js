@@ -7,6 +7,12 @@ const upstream_path = '/y9wlqUkQK'
 // Website you intended to retrieve for users using mobile devices.
 const upstream_mobile = 'stats.uptimerobot.com'
 
+// Custom domain for the UptimeRobot RSS website.
+const rss_domain = 'rss.uptimerobot.com'
+
+// Custom pathname for the UptimeRobot RSS website.
+const rss_path = 'u1670178-c194c09553de8b8107de0032f7e05956'
+
 // Countries and regions where you wish to suspend your service.
 // const blocked_region = ['CN', 'KP', 'SY', 'PK', 'CU']
 const blocked_region = []
@@ -62,10 +68,14 @@ async function fetchAndApply(request) {
         return response;
     } else if (url.pathname == '/') {
         url.pathname = upstream_path;
+    } else if (url.pathname == '/rss') {
+        upstream_domain = rss_domain;
+        url.host = upstream_domain;
+        url.pathname = rss_path;
     } else {
         url.pathname = url.pathname;
     }
-    
+
     if (blocked_region.includes(region)) {
         response = new Response('Access denied: WorkersProxy is not available in your region yet.', {
             status: 403
@@ -97,7 +107,7 @@ async function fetchAndApply(request) {
         let response_headers = original_response.headers;
         let new_response_headers = new Headers(response_headers);
         let status = original_response.status;
-		
+
 		if (disable_cache) {
 			new_response_headers.set('Cache-Control', 'no-store');
 	    }
@@ -107,11 +117,11 @@ async function fetchAndApply(request) {
         new_response_headers.delete('content-security-policy');
         new_response_headers.delete('content-security-policy-report-only');
         new_response_headers.delete('clear-site-data');
-		
+
 		if (new_response_headers.get("x-pjax-url")) {
             new_response_headers.set("x-pjax-url", response_headers.get("x-pjax-url").replace("//" + upstream_domain, "//" + url_hostname));
         }
-		
+
         const content_type = new_response_headers.get('content-type');
         if (content_type != null && content_type.includes('text/html') && content_type.includes('UTF-8')) {
             original_text = await replace_response_text(original_response_clone, upstream_domain, url_hostname);
